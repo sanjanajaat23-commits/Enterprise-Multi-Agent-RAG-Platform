@@ -1,3 +1,6 @@
+<img width="1920" height="1080" alt="Screenshot 2026-08-20 091728" src="https://github.com/user-attachments/assets/fae9cb38-5286-4e23-8f70-d0f641fbc623" />
+<img width="1920" height="1080" alt="Screenshot 2026-08-20 194652" src="https://github.com/user-attachments/assets/459b044f-1daa-4b13-afdf-f224aaafe058" />
+<img width="1920" height="1080" alt="Screenshot 2026-08-20 194652" src="https://github.com/user-attachments/assets/9f42ebd3-f999-444b-bbc5-d95a335c489b" />
 # Enterprise Multi-Agent RAG Platform
 
 An end-to-end Enterprise Multi-Agent Retrieval-Augmented Generation (RAG) Platform built with FastAPI, Next.js, FAISS, Sentence Transformers, SQLite, and Ollama.
