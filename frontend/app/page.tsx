@@ -28,34 +28,40 @@ export default function Home() {
   const [totalChunks, setTotalChunks] = useState(0);
   const [systemStatus, setSystemStatus] = useState<SystemStatus>("checking");
 
-  const checkBackendStatus = async () => {
-    try {
-      const response = await fetch(`${API_URL}/api/v1/health`);
-      if (!response.ok) throw new Error("Backend unavailable");
-      setSystemStatus("online");
-    } catch (error) {
-      console.error(error);
-      setSystemStatus("offline");
-    }
-  };
-
-  const loadDocuments = async (currentSessionId: string = sessionId) => {
-    try {
-      const response = await fetch(`${API_URL}/api/v1/documents/${currentSessionId}`);
-      if (!response.ok) throw new Error("Unable to load documents");
-      const data = await response.json();
-      setDocuments(data.documents || []);
-      setTotalChunks(data.total_chunks || 0);
-    } catch (error) {
-      console.error(error);
-      setDocuments([]);
-      setTotalChunks(0);
-    }
-  };
-
   useEffect(() => {
-    checkBackendStatus();
-    loadDocuments("web-session-1");
+    let cancelled = false;
+
+    const initialize = async () => {
+      try {
+        const healthResponse = await fetch(`${API_URL}/api/v1/health`);
+        if (!healthResponse.ok) throw new Error("Backend unavailable");
+        if (!cancelled) setSystemStatus("online");
+      } catch (error) {
+        console.error(error);
+        if (!cancelled) setSystemStatus("offline");
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/api/v1/documents/web-session-1`);
+        if (!response.ok) throw new Error("Unable to load documents");
+        const data = await response.json();
+        if (!cancelled) {
+          setDocuments(data.documents || []);
+          setTotalChunks(data.total_chunks || 0);
+        }
+      } catch (error) {
+        console.error(error);
+        if (!cancelled) {
+          setDocuments([]);
+          setTotalChunks(0);
+        }
+      }
+    };
+
+    void initialize();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const sendMessage = async () => {
