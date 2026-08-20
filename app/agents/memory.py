@@ -1,64 +1,61 @@
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.database.db import SessionLocal
 from app.models.conversation import ConversationMessage
 
+MAX_MEMORY_MESSAGES = 10
 
-def add_to_memory(session_id: str, role: str, content: str):
+
+def add_to_memory(session_id: str, role: str, content: str) -> None:
+    """Persist one message for an isolated chat session."""
     db: Session = SessionLocal()
 
     try:
-        message = ConversationMessage(
-            session_id=session_id,
-            role=role,
-            content=content,
+        db.add(
+            ConversationMessage(
+                session_id=session_id,
+                role=role,
+                content=content,
+            )
         )
-
-        db.add(message)
         db.commit()
-
     finally:
         db.close()
 
 
 def get_memory(session_id: str) -> str:
+    """Return only the latest messages belonging to this session."""
     db: Session = SessionLocal()
 
     try:
-        messages = (
-            db.query(ConversationMessage)
-            .filter(ConversationMessage.session_id == session_id)
-            .order_by(ConversationMessage.created_at.asc())
-            .all()
+        statement = (
+            select(ConversationMessage)
+            .where(ConversationMessage.session_id == session_id)
+            .order_by(ConversationMessage.created_at.desc())
+            .limit(MAX_MEMORY_MESSAGES)
         )
+        messages = list(db.scalars(statement).all())
+        messages.reverse()
 
-        # Keep only the latest 10 messages
-        messages = messages[-10:]
-
-        history = []
-
-        for message in messages:
-            history.append(
-                f"{message.role.upper()}: {message.content}"
-            )
-
-        return "\n".join(history)
-
+        return "\n".join(
+            f"{message.role.upper()}: {message.content}"
+            for message in messages
+        )
     finally:
         db.close()
 
 
-def clear_memory(session_id: str):
+def clear_memory(session_id: str) -> None:
+    """Delete conversation history for exactly one chat session."""
     db: Session = SessionLocal()
 
     try:
-        (
-            db.query(ConversationMessage)
-            .filter(ConversationMessage.session_id == session_id)
-            .delete()
+        db.execute(
+            delete(ConversationMessage).where(
+                ConversationMessage.session_id == session_id
+            )
         )
-
         db.commit()
-
     finally:
         db.close()
