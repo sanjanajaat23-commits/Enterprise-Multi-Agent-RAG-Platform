@@ -51,6 +51,6 @@ Thumbs.db
 # Temporary/debug files
 dump.txt
 vectorstor.code-search
+
 # Generated vector databases
 data/chroma_db/
-data/vector_stores/git add .
